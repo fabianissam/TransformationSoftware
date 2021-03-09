@@ -1,0 +1,12 @@
+POST http://localhost:3001/person/ HTTP/1.1
+content-type: application/json
+
+{
+  "id": 15,
+  "name":"Abdallah",
+  "vorname":"Fabian",
+  "benutzername":"fabianissam",
+  "password":"fabianissam",
+  "fachbereich": 5,
+  "email":"fabian.abdallah98@googlemail.com"
+}

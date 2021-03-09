@@ -1,0 +1,241 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "simple FHAachen API",
+    "description": "CRUD on basic FH AACHEN Information",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/"
+    }
+  ],
+  "paths": {
+    "/person": {
+      "get": {
+        "summary": "Call all Persons from database",
+        "operationId": "allPersons",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/person"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Insert one Person from database",
+        "operationId": "insertPerson",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/person"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error"
+          }
+        },
+        "requestBody": {
+          "description": "a new person",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/person"
+              }
+            }
+          }
+        }
+      },
+  "put": {
+    "summary": "update one Person from database",
+    "operationId": "updatePerson",
+    "responses": {
+      "200": {
+        "description": "OK",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/person"
+            }
+          }
+        }
+      },
+      "404": {
+        "description": ""
+      }
+    },
+    "requestBody": {
+      "description": "",
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "$ref": "#/components/schemas/person"
+          }
+        }
+      }
+    }
+  }
+},
+"/person/{id}/": {
+  "get": {
+    "summary": "Call one Person by id from database",
+    "operationId": "onePerson",
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "OK",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/person"
+            }
+          }
+        },
+        "links": {
+          "address": {
+            "operationId": "onePersonAdress",
+            "parameters": {
+              "userId": "$request.path.id"
+            }
+          }
+        }
+    },
+      "404": {
+        "description": ""
+      }
+    }
+  },
+  "delete": {
+    "summary": "delete one Person from database",
+    "operationId": "deletePerson",
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "OK",
+        "content": {
+          "text/html": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "404": {
+        "description": ""
+      }
+    }
+  }
+},"/person/{userid}/adress": {
+  "get": {
+    "summary": "Call adress from one Person by id from database",
+    "operationId": "onePersonAdress",
+    "parameters": [
+      {
+        "name": "userid",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "OK",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/adress"
+            }
+          }
+        }
+      },
+      "404": {
+        "description": ""
+      }
+    }
+  }
+}
+  },
+  "components": {
+    "schemas": {
+      "adress":{
+        "type":"object",
+        "properties":{
+          "street":{
+            "type":"string"
+          },
+          "zip-code":{
+            "type":"string"
+          }
+        }
+      },
+      "person": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "vorname": {
+            "type": "string"
+          },
+          "benutzername": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "fachbereich": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}
