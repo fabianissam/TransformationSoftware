@@ -17,7 +17,6 @@ function createGraphQLOperation(oas, schema) {
       var result = sendRequest(req.query.query);
       res.send(result);
     } else {
-      console.log(req.url);
       var reqtra = new RequestTransformation(oas, schema);
       reqtra.init(req);
       var query = await reqtra.createQueryOrMutation();
@@ -28,7 +27,7 @@ function createGraphQLOperation(oas, schema) {
       // to recognize
       console.log(query);
 
-      var result = await sendRequest(query);
+      var result = await sendRequest(query, reqtra.getOperationId());
       res.send(result);
     }
   };
