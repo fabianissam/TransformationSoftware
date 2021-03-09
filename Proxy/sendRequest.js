@@ -2,7 +2,10 @@ const fetch = require("node-fetch");
 
 module.exports = function sendRequest(query, operation) {
   var result = fetch(`http://localhost:3001/graphql?query=${query}`, {
-    method: "get",
+    method: "post",
+    body: {
+      query: query,
+    },
   })
     .then((res) => {
       return res.json();
