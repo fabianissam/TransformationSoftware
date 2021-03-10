@@ -46,7 +46,14 @@
             }
           },
           "404": {
-            "description": "Error"
+            "description": "Error",
+            "content":{
+              "application/json":{
+              "schema":{
+                "type":"string"
+              }
+            }
+            }
           }
         },
         "requestBody": {

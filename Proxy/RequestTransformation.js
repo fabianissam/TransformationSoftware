@@ -1,16 +1,11 @@
 const graphql = require("graphql");
-const OtG = require("openapi-to-graphql");
+const $RefParser = require("@apidevtools/json-schema-ref-parser");
 const Validator = require("jsonschema").Validator;
 const toJsonSchema = require("@openapi-contrib/openapi-schema-to-json-schema");
 const stringifyObject = require("stringify-object");
 //only json as input allowed for now
 // form data
-
 const sendRequest = require("./sendRequest");
-const $RefParser = require("@apidevtools/json-schema-ref-parser");
-
-var OpenAPIRequestValidator = require("openapi-request-validator").default;
-//options function for differentiate json and form
 
 function createGraphQLOperation(oas, schema) {
   return async function graphqlOperation(req, res, next) {
@@ -21,7 +16,7 @@ function createGraphQLOperation(oas, schema) {
     } else {
       var reqtra = new RequestTransformation(oas, schema);
       reqtra.init(req);
-      var valid = reqtra.validRequest();
+      var valid = await reqtra.validRequest();
       if (valid) {
         var query = await reqtra.createQueryOrMutation();
 
@@ -67,65 +62,43 @@ class RequestTransformation {
 
     this.data = data;
   }
-  validRequest() {
+  async validRequest() {
     // working
     var validRequest = false;
-    var method = this.methods.find((method) => {
-      return (
-        this.data.method === method.method &&
-        this.pathChecker(method) &&
-        this.checkBody(method) &&
-        this.checkParameters(method)
-      );
-    });
-    if (this.checkRequest(method)) {
-      validRequest = true;
+    for (var key in this.methods) {
+      var method = this.methods[key];
+      var validMethod = this.data.method === method.method;
+      var validPath = this.pathChecker(method);
+      var validBody = await this.checkBody(method);
+      var validParameters = await this.checkParameters(method);
+      if (validMethod && validPath && validBody && validParameters) {
+        validRequest = true;
+        break;
+      }
     }
-
     return validRequest;
   }
-
   async checkBody(method) {
-    // only for json and formdata
-    //working
-
+    //funktioniert nur wenn {} geschickt wird;
     var v = new Validator();
-    var validBody = true;
+    var validBody = false;
     if (method.rest.requestBody) {
       var contentTypes = Object.keys(method.rest.requestBody.content);
-
       var contentType = contentTypes.find((contentType) => {
-        return contentType === this.data.headers["content-type"];
+        return contentType === "application/json";
       });
-      if (contentType) {
-        var schema = method.rest.requestBody.content[contentType].schema;
-        //handle anyof
+      if (this.data.headers["content-type"] === "application/json") {
+        if (contentType) {
+          var schema = method.rest.requestBody.content[contentType].schema;
+          var convertedSchema = toJsonSchema(schema);
+          convertedSchema.additionalProperties = false;
+          convertedSchema.required = Object.keys(convertedSchema.properties);
 
-        var resolvedBody = await $RefParser.dereference({
-          info: schema,
-          components: this.spec.components,
-        });
-        var convertedSchema = toJsonSchema(resolvedBody.info);
-
-        var propertyKeysSchema = Object.keys(convertedSchema.properties);
-        var propertyKeysData = Object.keys(this.data.body);
-
-        if (!arrayCompare(propertyKeysData, propertyKeysSchema)) {
-          validBody = false;
-        } else {
-          convertedSchema["additionalProperties"] = false;
-          convertedSchema["required"] = Object.keys(convertedSchema.properties);
-
-          var obj = this.data.body;
-          // eventually put the value in the objectt if not validate
-
-          if (!v.validate(obj, convertedSchema).valid) {
-            validBody = false;
-          }
+          validBody = v.validate(this.data.body, convertedSchema).valid;
         }
-      } else {
-        validBody = false;
       }
+    } else {
+      validBody = true;
     }
     return validBody;
   }
@@ -144,19 +117,18 @@ class RequestTransformation {
     var parameters = method.rest.parameters;
 
     if (parameters) {
-      const resolvedParameters = await $RefParser.dereference({
-        info: parameters,
-        components: this.spec.components,
-      });
-
-      for (var key in resolvedParameters.info) {
-        var para = resolvedParameters.info[key];
-
+      for (var key in parameters) {
+        var para = parameters[key];
         var name = para.name;
 
         var convertedSchema = toJsonSchema.fromParameter(para);
-        convertedSchema["additionalProperties"] = false;
-        convertedSchema["required"] = Object.keys(convertedSchema.properties);
+
+        if (convertedSchema.type === "object") {
+          convertedSchema.additionalProperties = false;
+          convertedSchema.required = Object.keys(convertedSchema.properties);
+        } else if (convertedSchema.type === "array") {
+          convertedSchema.additionalItems = false;
+        }
 
         var obj = {};
         // eventually put the value in the objectt if not validate
@@ -169,13 +141,6 @@ class RequestTransformation {
           obj = this.data.query[name];
         } else if (para.in === "cookie") {
           obj = this.data.cookies[name];
-        }
-        var propertyKeysSchema = Object.keys(convertedSchema.properties);
-        var propertyKeysData = Object.keys(obj);
-
-        if (!arrayCompare(propertyKeysData, propertyKeysSchema)) {
-          validParameters = false;
-          break;
         }
         if (!v.validate(obj, convertedSchema).valid) {
           validParameters = false;
@@ -503,25 +468,3 @@ class RequestTransformation {
 }
 
 module.exports = { createGraphQLOperation };
-
-function arrayCompare(_arr1, _arr2) {
-  if (
-    !Array.isArray(_arr1) ||
-    !Array.isArray(_arr2) ||
-    _arr1.length !== _arr2.length
-  ) {
-    return false;
-  }
-
-  // .concat() to not mutate arguments
-  const arr1 = _arr1.concat().sort();
-  const arr2 = _arr2.concat().sort();
-
-  for (let i = 0; i < arr1.length; i++) {
-    if (arr1[i] !== arr2[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
