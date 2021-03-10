@@ -8,6 +8,8 @@ const stringifyObject = require("stringify-object");
 
 const sendRequest = require("./sendRequest");
 const $RefParser = require("@apidevtools/json-schema-ref-parser");
+
+var OpenAPIRequestValidator = require("openapi-request-validator").default;
 //options function for differentiate json and form
 
 function createGraphQLOperation(oas, schema) {
@@ -19,7 +21,8 @@ function createGraphQLOperation(oas, schema) {
     } else {
       var reqtra = new RequestTransformation(oas, schema);
       reqtra.init(req);
-      if (!reqtra.validRequest()) {
+      var valid = reqtra.validRequest();
+      if (valid) {
         var query = await reqtra.createQueryOrMutation();
 
         console.log(query);
@@ -66,21 +69,22 @@ class RequestTransformation {
   }
   validRequest() {
     // working
-    var validRequest = true;
+    var validRequest = false;
     var method = this.methods.find((method) => {
       return (
+        this.data.method === method.method &&
         this.pathChecker(method) &&
-        method.method === this.data.method &&
-        this.checkParameters(method) &&
-        this.checkBody(method)
+        this.checkBody(method) &&
+        this.checkParameters(method)
       );
     });
-    if (!method) {
-      validRequest = false;
+    if (this.checkRequest(method)) {
+      validRequest = true;
     }
 
     return validRequest;
   }
+
   async checkBody(method) {
     // only for json and formdata
     //working
@@ -107,16 +111,17 @@ class RequestTransformation {
         var propertyKeysData = Object.keys(this.data.body);
 
         if (!arrayCompare(propertyKeysData, propertyKeysSchema)) {
-          return false;
-        }
-        convertedSchema["additionalProperties"] = false;
-        convertedSchema["required"] = Object.keys(convertedSchema.properties);
-
-        var obj = this.data.body;
-        // eventually put the value in the objectt if not validate
-
-        if (!v.validate(obj, convertedSchema).valid) {
           validBody = false;
+        } else {
+          convertedSchema["additionalProperties"] = false;
+          convertedSchema["required"] = Object.keys(convertedSchema.properties);
+
+          var obj = this.data.body;
+          // eventually put the value in the objectt if not validate
+
+          if (!v.validate(obj, convertedSchema).valid) {
+            validBody = false;
+          }
         }
       } else {
         validBody = false;
@@ -144,7 +149,9 @@ class RequestTransformation {
         components: this.spec.components,
       });
 
-      for (var para in resolvedParameters.info) {
+      for (var key in resolvedParameters.info) {
+        var para = resolvedParameters.info[key];
+
         var name = para.name;
 
         var convertedSchema = toJsonSchema.fromParameter(para);

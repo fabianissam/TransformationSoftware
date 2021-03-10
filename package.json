@@ -28,6 +28,7 @@
     "jsonschema": "^1.4.0",
     "mysql": "^2.18.1",
     "node-fetch": "^2.6.1",
+    "openapi-request-validator": "^7.4.0",
     "openapi-schema-to-json-schema": "^2.2.0",
     "openapi-to-graphql": "^2.2.5",
     "stringify-object": "^3.3.0"
