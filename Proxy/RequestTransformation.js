@@ -19,16 +19,16 @@ function createGraphQLOperation(oas, schema) {
     } else {
       var reqtra = new RequestTransformation(oas, schema);
       reqtra.init(req);
-      var query = await reqtra.createQueryOrMutation();
-      req.url = "/graphql";
-      req.method = "POST"; // graphql works only with get and post
-      req.query.query = query;
-      req.body = { query: query };
-      // to recognize
-      console.log(query);
+      if (!reqtra.validRequest()) {
+        var query = await reqtra.createQueryOrMutation();
 
-      var result = await sendRequest(query, reqtra.getOperationId());
-      res.send(result);
+        console.log(query);
+        var result = await sendRequest(query, reqtra.getOperationId());
+        res.send(result);
+      } else {
+        res.status(400);
+        res.send({ error: "falsche Anfrage" });
+      }
     }
   };
 }
@@ -49,7 +49,7 @@ class RequestTransformation {
     this.getRequestData(req);
     this.createMethods();
     this.ast = graphql.parse(graphql.printSchema(this.schema));
-    this.validRequest(); // throws Error if false;
+    // throws Error if false;
   }
   getRequestData(req) {
     var data = {};
@@ -76,7 +76,7 @@ class RequestTransformation {
       );
     });
     if (!method) {
-      return new Error();
+      validRequest = false;
     }
 
     return validRequest;
@@ -84,6 +84,8 @@ class RequestTransformation {
   async checkBody(method) {
     // only for json and formdata
     //working
+
+    var v = new Validator();
     var validBody = true;
     if (method.rest.requestBody) {
       var contentTypes = Object.keys(method.rest.requestBody.content);
@@ -100,6 +102,16 @@ class RequestTransformation {
           components: this.spec.components,
         });
         var convertedSchema = toJsonSchema(resolvedBody.info);
+
+        var propertyKeysSchema = Object.keys(convertedSchema.properties);
+        var propertyKeysData = Object.keys(this.data.body);
+
+        if (!arrayCompare(propertyKeysData, propertyKeysSchema)) {
+          return false;
+        }
+        convertedSchema["additionalProperties"] = false;
+        convertedSchema["required"] = Object.keys(convertedSchema.properties);
+
         var obj = this.data.body;
         // eventually put the value in the objectt if not validate
 
@@ -136,6 +148,8 @@ class RequestTransformation {
         var name = para.name;
 
         var convertedSchema = toJsonSchema.fromParameter(para);
+        convertedSchema["additionalProperties"] = false;
+        convertedSchema["required"] = Object.keys(convertedSchema.properties);
 
         var obj = {};
         // eventually put the value in the objectt if not validate
@@ -148,6 +162,13 @@ class RequestTransformation {
           obj = this.data.query[name];
         } else if (para.in === "cookie") {
           obj = this.data.cookies[name];
+        }
+        var propertyKeysSchema = Object.keys(convertedSchema.properties);
+        var propertyKeysData = Object.keys(obj);
+
+        if (!arrayCompare(propertyKeysData, propertyKeysSchema)) {
+          validParameters = false;
+          break;
         }
         if (!v.validate(obj, convertedSchema).valid) {
           validParameters = false;
@@ -475,3 +496,25 @@ class RequestTransformation {
 }
 
 module.exports = { createGraphQLOperation };
+
+function arrayCompare(_arr1, _arr2) {
+  if (
+    !Array.isArray(_arr1) ||
+    !Array.isArray(_arr2) ||
+    _arr1.length !== _arr2.length
+  ) {
+    return false;
+  }
+
+  // .concat() to not mutate arguments
+  const arr1 = _arr1.concat().sort();
+  const arr2 = _arr2.concat().sort();
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}

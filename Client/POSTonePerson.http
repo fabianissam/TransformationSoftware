@@ -2,8 +2,9 @@ POST http://localhost:3000/person/ HTTP/1.1
 content-type: application/json
 
 {
-  "id": 18,
+  "id": 25,
   "name":"Abdallah",
+  "baum":"wolle",
   "vorname":"Fabian",
   "benutzername":"fabianissam",
   "password":"fabianissam",

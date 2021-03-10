@@ -18,7 +18,6 @@ async function startServer() {
   app.use(express.urlencoded());
   app.use(cookieParser());
   app.use(reqtra.createGraphQLOperation(oas, schema));
-
   // app.use((req,res,body)=>{
   //handle result
   //})

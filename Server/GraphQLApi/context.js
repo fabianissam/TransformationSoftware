@@ -17,9 +17,7 @@ module.exports = class Context {
   insertPerson(personData) {
     var sql = `insert into person(id, name, vorname,benutzername,password,fachbereich,email) values (${personData.id},'${personData["name"]}' ,'${personData["vorname"]}' ,'${personData["benutzername"]}' ,'${personData["password"]}' ,'${personData["fachbereich"]}' ,'${personData["email"]}')`;
     con.query(sql, function (err, result) {
-      if (err) {
-        throw err;
-      }
+      if (err) throw err;
     });
   }
 
