@@ -17,6 +17,7 @@ async function startServer() {
         "/person": {
           get: (obj, args, context, info) => {
             //console.log(info);
+            //console.log(obj._openAPIToGraphQL.security.basicAuth);
             console.log(obj._openAPIToGraphQL.security.basicAuth);
             var myResultsPromise = new Promise((resolve, reject) => {
               context.getAllPerson((results) => {

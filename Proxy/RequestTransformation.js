@@ -382,8 +382,8 @@ class RequestTransformation {
     }
   }
   checkBasicAuth() {
-    if (this.currentMethod.security) {
-      var securityMethod = Object.keys(this.currentMethod.security[0])[0];
+    if (this.currentMethod.rest.security) {
+      var securityMethod = Object.keys(this.currentMethod.rest.security[0])[0];
       if (securityMethod === "basicAuth") {
         this.basicAuth = true;
       }
