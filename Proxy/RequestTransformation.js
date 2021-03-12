@@ -49,6 +49,7 @@ class RequestTransformation {
     this.schema = schema;
     this.ast = undefined;
     this.currentMethod = undefined;
+    this.basicAuthName = "";
     this.basicAuth = false; // maybe a string which auth will be used but for now a boolean
   }
   init(req) {
@@ -353,12 +354,12 @@ class RequestTransformation {
       var basicAuthViewerOperation = "";
       if (this.data.method === "get") {
         graphQLOperation = `${afterOperation}${typeKeysToString}`;
-        basicAuthViewerOperation = `query{viewerBasicAuth(username: "${usernameAndPassword[0]}", password: "${usernameAndPassword[1]}"){
+        basicAuthViewerOperation = `query{viewer${this.basicAuthName}(username: "${usernameAndPassword[0]}", password: "${usernameAndPassword[1]}"){
           ${graphQLOperation}
         }}`;
       } else {
         graphQLOperation = `${afterOperation}${typeKeysToString}`;
-        basicAuthViewerOperation = `mutation{mutationViewerBasicAuth(username: "${usernameAndPassword[0]}", password: "${usernameAndPassword[1]}"){
+        basicAuthViewerOperation = `mutation{mutationViewer${this.basicAuthName}(username: "${usernameAndPassword[0]}", password: "${usernameAndPassword[1]}"){
           ${graphQLOperation}
         }}`;
       }
@@ -372,6 +373,14 @@ class RequestTransformation {
       return graphQLOperation;
     }
   }
+  getBasicAuthNameSchema() {
+    var allSecuritySchemes = Object.keys(this.spec.securitySchemes);
+    var result = allSecuritySchemes.find((schema) => {
+      var tmp = this.spec.securitySchemes[schema];
+      return tmp.type === "http" && tmp.scheme === "basic";
+    });
+    return result; // first letter uppercase
+  }
   getBasicAuthUsernameAndPassword() {
     if (this.data.headers.authorization) {
       return new Buffer(this.data.headers.authorization.split(" ")[1], "base64")
@@ -382,16 +391,25 @@ class RequestTransformation {
     }
   }
   checkBasicAuth() {
-    if (this.currentMethod.rest.security) {
-      var securityMethod = Object.keys(this.currentMethod.rest.security[0])[0];
-      if (securityMethod === "basicAuth") {
-        this.basicAuth = true;
+    if (this.spec.securitySchemes) {
+      var localBasicAuthName = this.getBasicAuthNameSchema();
+      this.basicAuthName =
+        localBasicAuthName.charAt(0).toUpperCase() +
+        localBasicAuthName.slice(1);
+
+      if (this.currentMethod.rest.security) {
+        var securityMethod = Object.keys(
+          this.currentMethod.rest.security[0]
+        )[0];
+        if (securityMethod === localBasicAuthName) {
+          this.basicAuth = true;
+        }
       }
-    }
-    if (this.spec.security) {
-      var securityMethod = Object.keys(this.spec.security[0])[0];
-      if (securityMethod === "basicAuth") {
-        this.basicAuth = true;
+      if (this.spec.security) {
+        var securityMethod = Object.keys(this.spec.security[0])[0];
+        if (securityMethod === localBasicAuthName) {
+          this.basicAuth = true;
+        }
       }
     }
   }
@@ -492,12 +510,14 @@ class RequestTransformation {
     var searchFor = "";
 
     if (this.data.method === "get") {
-      searchFor = this.basicAuth ? "ViewerBasicAuth" : "Query";
+      searchFor = this.basicAuth ? `Viewer${this.basicAuthName}` : "Query";
       soloDefinition = definitions.find((definition) => {
         return definition.name.value === searchFor;
       });
     } else {
-      searchFor = this.basicAuth ? "MutationViewerBasicAuth" : "Mutation";
+      searchFor = this.basicAuth
+        ? `MutationViewer${this.basicAuthName}`
+        : "Mutation";
       soloDefinition = definitions.find((definition) => {
         return definition.name.value === searchFor;
       });
