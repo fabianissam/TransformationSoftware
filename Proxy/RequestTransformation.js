@@ -39,8 +39,8 @@ function createGraphQLOperation(oas, schema) {
 }
 
 // option for authentication wrap to query or subscriptions but dont want that
-// add functionality for reusable requestbodys and parameter
 
+// body only json allowed
 class RequestTransformation {
   constructor(oas, schema) {
     this.spec = oas;
