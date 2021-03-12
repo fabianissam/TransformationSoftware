@@ -374,9 +374,9 @@ class RequestTransformation {
     }
   }
   getBasicAuthNameSchema() {
-    var allSecuritySchemes = Object.keys(this.spec.securitySchemes);
+    var allSecuritySchemes = Object.keys(this.spec.components.securitySchemes);
     var result = allSecuritySchemes.find((schema) => {
-      var tmp = this.spec.securitySchemes[schema];
+      var tmp = this.spec.components.securitySchemes[schema];
       return tmp.type === "http" && tmp.scheme === "basic";
     });
     return result; // first letter uppercase
@@ -391,7 +391,7 @@ class RequestTransformation {
     }
   }
   checkBasicAuth() {
-    if (this.spec.securitySchemes) {
+    if (this.spec.components.securitySchemes) {
       var localBasicAuthName = this.getBasicAuthNameSchema();
       this.basicAuthName =
         localBasicAuthName.charAt(0).toUpperCase() +
@@ -440,12 +440,14 @@ class RequestTransformation {
     var soloDefinition = {};
     var searchFor = "";
     if (this.data.method === "get") {
-      searchFor = this.basicAuth ? "ViewerBasicAuth" : "Query";
+      searchFor = this.basicAuth ? `Viewer${this.basicAuthName}` : "Query";
       soloDefinition = definitions.find((definition) => {
         return definition.name.value === searchFor;
       });
     } else {
-      searchFor = this.basicAuth ? "MutationViewerBasicAuth" : "Mutation";
+      searchFor = this.basicAuth
+        ? `MutationViewer${this.basicAuthName}`
+        : "Mutation";
       soloDefinition = definitions.find((definition) => {
         return definition.name.value === searchFor;
       });
