@@ -4,7 +4,6 @@ content-type: application/json
 {
   "id": 26,
   "name":"Abdallah",
-  "baumm": "wolle",
   "vorname":"Fabian",
   "benutzername":"fabianissam",
   "password":"fabianissam",

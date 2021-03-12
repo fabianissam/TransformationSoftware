@@ -2,10 +2,10 @@
 
 const express = require("express");
 const { graphqlHTTP } = require("express-graphql");
-const { printSchema } = require("graphql");
 const OtG = require("openapi-to-graphql");
 const context = require("./context");
 const oas = require("../../Openapi.json");
+const util = require("util");
 
 async function startServer() {
   // use OpenAPI-to-GraphQL to create a GraphQL schema:
@@ -16,6 +16,8 @@ async function startServer() {
       "simple FHAachen API": {
         "/person": {
           get: (obj, args, context, info) => {
+            //console.log(info);
+            console.log(obj._openAPIToGraphQL.security.basicAuth);
             var myResultsPromise = new Promise((resolve, reject) => {
               context.getAllPerson((results) => {
                 resolve(results);

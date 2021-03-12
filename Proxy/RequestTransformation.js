@@ -3,6 +3,7 @@ const $RefParser = require("@apidevtools/json-schema-ref-parser");
 const Validator = require("jsonschema").Validator;
 const toJsonSchema = require("@openapi-contrib/openapi-schema-to-json-schema");
 const stringifyObject = require("stringify-object");
+var Buffer = require("buffer/").Buffer;
 //only json as input allowed for now
 // form data
 const sendRequest = require("./sendRequest");
@@ -18,10 +19,16 @@ function createGraphQLOperation(oas, schema) {
       reqtra.init(req);
       var valid = await reqtra.validRequest();
       if (valid) {
+        reqtra.checkBasicAuth();
         var query = await reqtra.createQueryOrMutation();
 
         console.log(query);
-        var result = await sendRequest(query, reqtra.getOperationId());
+        var result = await sendRequest(
+          query,
+          reqtra.getOperationId(),
+          reqtra.basicAuth,
+          reqtra.data.method
+        );
         res.send(result);
       } else {
         res.status(400);
@@ -42,6 +49,7 @@ class RequestTransformation {
     this.schema = schema;
     this.ast = undefined;
     this.currentMethod = undefined;
+    this.basicAuth = false; // maybe a string which auth will be used but for now a boolean
   }
   init(req) {
     this.getRequestData(req);
@@ -53,7 +61,7 @@ class RequestTransformation {
     var data = {};
     var path = req.baseUrl.concat(req.path);
     data.path = path[path.length - 1] !== "/" ? path + "/" : path;
-    data.headers = req.headers;
+    data.headers = req.headers; // maybe check if authorization header sent
     data.params = req.params;
     data.query = req.query;
     data.method = req.method.toLowerCase();
@@ -275,12 +283,7 @@ class RequestTransformation {
     var parametersList = method.rest.parameters;
 
     if (parametersList) {
-      const resolvedParameter = await $RefParser.dereference({
-        info: parametersList,
-        components: this.spec.components,
-      });
-
-      resolvedParameter.info.forEach((parameter) => {
+      parametersList.forEach((parameter) => {
         var para =
           parameter.name.charAt(0).toUpperCase() +
           parameter.name.slice(1) +
@@ -345,13 +348,52 @@ class RequestTransformation {
     // all Elements to make a successful graphql query
     var typeKeys = this.getTypeKeys(graphQLOperationName);
     var typeKeysToString = this.getTypeKeysToString(typeKeys);
-
-    if (this.data.method === "get") {
-      graphQLOperation = `query{${afterOperation}${typeKeysToString}}`;
+    if (this.basicAuth) {
+      var usernameAndPassword = this.getBasicAuthUsernameAndPassword();
+      var basicAuthViewerOperation = "";
+      if (this.data.method === "get") {
+        graphQLOperation = `${afterOperation}${typeKeysToString}`;
+        basicAuthViewerOperation = `query{viewerBasicAuth(username: "${usernameAndPassword[0]}", password: "${usernameAndPassword[1]}"){
+          ${graphQLOperation}
+        }}`;
+      } else {
+        graphQLOperation = `${afterOperation}${typeKeysToString}`;
+        basicAuthViewerOperation = `mutation{mutationViewerBasicAuth(username: "${usernameAndPassword[0]}", password: "${usernameAndPassword[1]}"){
+          ${graphQLOperation}
+        }}`;
+      }
+      return basicAuthViewerOperation;
     } else {
-      graphQLOperation = `mutation{${afterOperation}${typeKeysToString}}`;
+      if (this.data.method === "get") {
+        graphQLOperation = `query{${afterOperation}${typeKeysToString}}`;
+      } else {
+        graphQLOperation = `mutation{${afterOperation}${typeKeysToString}}`;
+      }
+      return graphQLOperation;
     }
-    return graphQLOperation;
+  }
+  getBasicAuthUsernameAndPassword() {
+    if (this.data.headers.authorization) {
+      return new Buffer(this.data.headers.authorization.split(" ")[1], "base64")
+        .toString()
+        .split(":");
+    } else {
+      return ["", ""];
+    }
+  }
+  checkBasicAuth() {
+    if (this.currentMethod.security) {
+      var securityMethod = Object.keys(this.currentMethod.security[0])[0];
+      if (securityMethod === "basicAuth") {
+        this.basicAuth = true;
+      }
+    }
+    if (this.spec.security) {
+      var securityMethod = Object.keys(this.spec.security[0])[0];
+      if (securityMethod === "basicAuth") {
+        this.basicAuth = true;
+      }
+    }
   }
   getTypeKeysToString(typeKeys) {
     //works
@@ -378,13 +420,16 @@ class RequestTransformation {
 
     var definitions = this.ast.definitions;
     var soloDefinition = {};
+    var searchFor = "";
     if (this.data.method === "get") {
+      searchFor = this.basicAuth ? "ViewerBasicAuth" : "Query";
       soloDefinition = definitions.find((definition) => {
-        return definition.name.value === "Query";
+        return definition.name.value === searchFor;
       });
     } else {
+      searchFor = this.basicAuth ? "MutationViewerBasicAuth" : "Mutation";
       soloDefinition = definitions.find((definition) => {
-        return definition.name.value === "Mutation";
+        return definition.name.value === searchFor;
       });
     }
     var soloType = soloDefinition.fields.find((type) => {
@@ -443,13 +488,18 @@ class RequestTransformation {
     var allArguments = [];
     var definitions = this.ast.definitions;
     var soloDefinition = {};
+
+    var searchFor = "";
+
     if (this.data.method === "get") {
+      searchFor = this.basicAuth ? "ViewerBasicAuth" : "Query";
       soloDefinition = definitions.find((definition) => {
-        return definition.name.value === "Query";
+        return definition.name.value === searchFor;
       });
     } else {
+      searchFor = this.basicAuth ? "MutationViewerBasicAuth" : "Mutation";
       soloDefinition = definitions.find((definition) => {
-        return definition.name.value === "Mutation";
+        return definition.name.value === searchFor;
       });
     }
     var soloType = soloDefinition.fields.find((type) => {
