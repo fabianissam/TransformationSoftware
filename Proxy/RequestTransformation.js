@@ -101,6 +101,7 @@ class RequestTransformation {
         if (contentType) {
           var schema = method.rest.requestBody.content[contentType].schema;
           var convertedSchema = toJsonSchema(schema);
+          // if type object
           convertedSchema.additionalProperties = false;
           convertedSchema.required = Object.keys(convertedSchema.properties);
 
