@@ -27,6 +27,7 @@ function createGraphQLOperation(oas, schema) {
           query,
           reqtra.getOperationId(),
           reqtra.basicAuth,
+          reqtra.basicAuthName,
           reqtra.data.method
         );
         res.send(result);
