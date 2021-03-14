@@ -11,6 +11,7 @@ async function startServer() {
   const { schema } = await OtG.createGraphQLSchema(oas, {
     operationIdFieldNames: true,
     genericPayloadArgName: true,
+    createSubscriptionsFromCallbacks: true,
   });
   const newOas = await $RefParser.dereference(oas);
 

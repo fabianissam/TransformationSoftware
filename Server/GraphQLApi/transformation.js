@@ -12,6 +12,7 @@ async function startServer() {
   const { schema } = await OtG.createGraphQLSchema(oas, {
     operationIdFieldNames: true,
     genericPayloadArgName: true, // änderung
+    createSubscriptionsFromCallbacks: true,
     customResolvers: {
       "simple FHAachen API": {
         "/person": {
@@ -62,6 +63,7 @@ async function startServer() {
         },
       },
     },
+    customSubscriptionResolvers: {},
   });
 
   //console.log(printSchema(schema));
