@@ -98,6 +98,22 @@
           }
         }
       }
+    },
+    "callbacks":{
+      "personGotUpdated":{
+        "$url":{
+          "post":{
+            "requestBody":{
+              "$ref": "#/components/schemas/person"
+            },
+            "responses":{
+              "200":{
+                "description":"OK"
+              }
+            }
+          }
+        }
+      }
     }
   }
 },
