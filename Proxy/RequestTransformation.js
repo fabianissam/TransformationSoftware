@@ -6,6 +6,9 @@ const stringifyObject = require("stringify-object");
 var Buffer = require("buffer/").Buffer;
 //only json as input allowed for now
 // form data
+
+// no polymorphism support --> oneOf etc.
+
 const sendRequest = require("./sendRequest");
 
 function createGraphQLOperation(oas, schema) {

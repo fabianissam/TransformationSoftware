@@ -104,7 +104,14 @@
         "$url":{
           "post":{
             "requestBody":{
-              "$ref": "#/components/schemas/person"
+              "content":{
+                "application/json":{
+                  "schema":{
+                  "$ref": "#/components/schemas/person"
+                  }
+                }
+              }
+              
             },
             "responses":{
               "200":{
