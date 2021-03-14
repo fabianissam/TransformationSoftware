@@ -39,7 +39,8 @@ function createGraphQLOperation(oas, schema) {
   };
 }
 
-// option for authentication wrap to query or subscriptions but dont want that
+// subscriptions not supported yet
+// no polymorphism supported yet
 
 // body only json allowed
 class RequestTransformation {
