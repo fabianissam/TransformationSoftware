@@ -250,6 +250,15 @@
       "basicAuth":{
         "type":"http",
         "scheme": "basic"
+      },
+      "oAuth":{
+        "type": "oauth2",
+        "flows":{
+          "implicit":{
+            "authorizationUrl":"",
+            "scopes":
+          }
+        }
       }
     }
   },"security":[
