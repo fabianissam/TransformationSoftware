@@ -1,0 +1,1 @@
+CREATE TABLE person (name VARCHAR(20), vorname VARCHAR(20),benutzername VARCHAR(20),password VARCHAR(20), fachbereich INT,id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(50));

@@ -1,0 +1,37 @@
+{
+  "name": "transformationsoftware",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./Proxy/proxy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabianissam/TransformationSoftware.git"
+  },
+  "author": "Fabian Abdallah",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fabianissam/TransformationSoftware/issues"
+  },
+  "homepage": "https://github.com/fabianissam/TransformationSoftware#readme",
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^9.0.7",
+    "@openapi-contrib/openapi-schema-to-json-schema": "^3.0.4",
+    "@stoplight/json-ref-resolver": "^3.1.2",
+    "buffer": "^6.0.3",
+    "cookie-parser": "^1.4.5",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "express-graphql": "^0.11.0",
+    "graphql": "^15.3.0",
+    "jsonschema": "^1.4.0",
+    "mysql": "^2.18.1",
+    "node-fetch": "^2.6.1",
+    "openapi-request-validator": "^7.4.0",
+    "openapi-schema-to-json-schema": "^2.2.0",
+    "openapi-to-graphql": "^2.2.5",
+    "stringify-object": "^3.3.0"
+  }
+}
