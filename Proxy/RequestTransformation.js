@@ -96,22 +96,44 @@ class RequestTransformation {
     if (method.rest.requestBody) {
       var contentTypes = Object.keys(method.rest.requestBody.content);
       var contentType = contentTypes.find((contentType) => {
-        return contentType === "application/json";
+        return contentType === this.data.headers["content-type"];
       });
-      if (this.data.headers["content-type"] === "application/json") {
-        if (contentType) {
-          var schema = method.rest.requestBody.content[contentType].schema;
-          var convertedSchema = toJsonSchema(schema);
-          // if type object
-          convertedSchema.additionalProperties = false;
-          convertedSchema.required = Object.keys(convertedSchema.properties);
-
-          validBody = v.validate(this.data.body, convertedSchema).valid;
+      if (contentTypes) {
+        var schema = method.rest.requestBody.content[contentType].schema;
+        var convertedSchema = toJsonSchema(schema);
+        var typeRequestBody =
+          method.rest.requestBody.content[contentType].schema.type;
+        if (contentType === "application/json") {
+          if (typeRequestBody === "object") {
+            convertedSchema.additionalProperties = false;
+            convertedSchema.required = Object.keys(convertedSchema.properties);
+            validBody = v.validate(this.data.body, convertedSchema).valid;
+          } else if (typeRequestBody === "array") {
+            // schaue wie arrays und einzelne werte von express übertragen werden
+          } else {
+            var value = this.data.body[Object.keys(this.data.body)[0]]; // oder funktioniert das ohne object aber nicht bei formdata
+            validBody = v.validate(value, convertedSchema).valid;
+          }
+        } else if (contentType === "application/x-www-form-urlencoded") {
+          // needs to be tested lol
+          if (typeRequestBody === "object") {
+            convertedSchema.additionalProperties = false;
+            convertedSchema.required = Object.keys(convertedSchema.properties);
+            validBody = v.validate(this.data.body, convertedSchema).valid;
+          } else if (typeRequestBody === "array") {
+            var value = this.data.body[Object.keys(this.data.body)[0]];
+            //properties for array
+            validBody = v.validate(value, convertedSchema).valid;
+          } else {
+            var value = this.data.body[Object.keys(this.data.body)[0]];
+            validBody = v.validate(value, convertedSchema).valid;
+          }
         }
+      } else {
+        validBody = true;
       }
-    } else {
-      validBody = true;
     }
+
     return validBody;
   }
   async checkParameters(method) {
