@@ -15,8 +15,7 @@
       "get": {
         "summary": "Call all Persons from database",
         "operationId": "allPersons",
-        
-  
+
         "responses": {
           "200": {
             "description": "OK",
@@ -49,12 +48,12 @@
           },
           "404": {
             "description": "Error",
-            "content":{
-              "application/json":{
-              "schema":{
-                "type":"string"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
               }
-            }
             }
           }
         },
@@ -66,156 +65,204 @@
               "schema": {
                 "$ref": "#/components/schemas/person"
               }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/person"
+              }
             }
           }
         }
       },
-  "put": {
-    "summary": "update one Person from database",
-    "operationId": "updatePerson",
-    "responses": {
-      "200": {
-        "description": "OK",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/person"
+      "put": {
+        "summary": "update one Person from database",
+        "operationId": "updatePerson",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/person"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/person"
+              }
             }
           }
         }
-      },
-      "404": {
-        "description": ""
       }
     },
-    "requestBody": {
-      "description": "",
-      "required": true,
-      "content": {
-        "application/json": {
-          "schema": {
-            "$ref": "#/components/schemas/person"
+    "/person/{id}/": {
+      "get": {
+        "summary": "Call one Person by id from database",
+        "operationId": "onePerson",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/person"
+                }
+              }
+            },
+            "links": {
+              "address": {
+                "operationId": "onePersonAdress",
+                "parameters": {
+                  "userId": "$request.path.id"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "summary": "delete one Person from database",
+        "operationId": "deletePerson",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": ""
           }
         }
       }
-    }
-  }
-},
-"/person/{id}/": {
-  "get": {
-    "summary": "Call one Person by id from database",
-    "operationId": "onePerson",
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "description": "",
-        "schema": {
-          "type": "integer",
-          "minimum": 1
-        }
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "OK",
-        "content": {
-          "application/json": {
+    },
+    "/person/{userid}/adress": {
+      "get": {
+        "summary": "Call adress from one Person by id from database",
+        "operationId": "onePersonAdress",
+        "parameters": [
+          {
+            "name": "userid",
+            "in": "path",
+            "required": true,
+            "description": "",
             "schema": {
-              "$ref": "#/components/schemas/person"
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/adress"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new Adress",
+        "operationId": "newAdress",
+        "parameters": [
+          {
+            "name": "userid",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
             }
           }
         },
-        "links": {
-          "address": {
-            "operationId": "onePersonAdress",
-            "parameters": {
-              "userId": "$request.path.id"
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "integer"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "integer"
+              }
             }
           }
         }
-    },
-      "404": {
-        "description": ""
       }
     }
-  },
-  "delete": {
-    "summary": "delete one Person from database",
-    "operationId": "deletePerson",
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "description": "",
-        "schema": {
-          "type": "integer",
-          "minimum": 1
-        }
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "OK",
-        "content": {
-          "text/html": {
-            "schema": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "404": {
-        "description": ""
-      }
-    }
-  }
-},"/person/{userid}/adress": {
-  "get": {
-    "summary": "Call adress from one Person by id from database",
-    "operationId": "onePersonAdress",
-    "parameters": [
-      {
-        "name": "userid",
-        "in": "path",
-        "required": true,
-        "description": "",
-        "schema": {
-          "type": "integer",
-          "minimum": 1
-        }
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "OK",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/adress"
-            }
-          }
-        }
-      },
-      "404": {
-        "description": ""
-      }
-    }
-  }
-}
   },
   "components": {
     "schemas": {
-      "adress":{
-        "type":"object",
-        "properties":{
-          "street":{
-            "type":"string"
+      "adress": {
+        "type": "object",
+        "properties": {
+          "street": {
+            "type": "string"
           },
-          "zip-code":{
-            "type":"string"
+          "zip-code": {
+            "type": "string"
           }
         }
       },
@@ -246,16 +293,16 @@
         }
       }
     },
-    "securitySchemes":{
-      "basicAuth":{
-        "type":"http",
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
         "scheme": "basic"
       }
     }
-  },"security":[
+  },
+  "security": [
     {
       "basicAuth": []
     }
   ]
-
 }
