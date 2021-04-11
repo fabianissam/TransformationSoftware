@@ -6,6 +6,7 @@ const reqtra = require("./RequestTransformation");
 const cookieParser = require("cookie-parser");
 const oas = require("../Openapi.json");
 const $RefParser = require("@apidevtools/json-schema-ref-parser");
+const graphql = require("graphql");
 
 async function startServer() {
   const { schema } = await OtG.createGraphQLSchema(oas, {
@@ -13,7 +14,7 @@ async function startServer() {
     genericPayloadArgName: true,
   });
   const newOas = await $RefParser.dereference(oas);
-
+  console.log(graphql.printSchema(schema));
   const app = express();
 
   app.use(express.json());

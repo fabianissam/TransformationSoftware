@@ -2,5 +2,9 @@ POST http://localhost:3000/person/1/adress HTTP/1.1
 content-type: application/json
 Authorization: Basic d2lraTpwZWRpYQ==
 
-1
+[
+  {
+    
+  }
+]
 

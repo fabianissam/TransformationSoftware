@@ -294,7 +294,7 @@
       }
     },
     "securitySchemes": {
-      "basicAuth": {
+      "http": {
         "type": "http",
         "scheme": "basic"
       }
@@ -302,7 +302,7 @@
   },
   "security": [
     {
-      "basicAuth": []
+      "http": []
     }
   ]
 }
