@@ -73,9 +73,7 @@ class RequestTransformation {
 
     this.data = data;
   }
-  formDataTransformer(){
-    
-  }
+  formDataTransformer() {}
   async validRequest() {
     // working
     var validRequest = false;
@@ -419,10 +417,11 @@ class RequestTransformation {
   }
   checkBasicAuth() {
     if (this.spec.components.securitySchemes) {
-      var localBasicAuthName = this.getBasicAuthNameSchema();
+      /* var localBasicAuthName = this.getBasicAuthNameSchema();
       this.basicAuthName =
         localBasicAuthName.charAt(0).toUpperCase() +
-        localBasicAuthName.slice(1);
+        localBasicAuthName.slice(1);*/
+      this.basicAuthName = "BasicAuth";
 
       if (this.currentMethod.rest.security) {
         var securityMethod = Object.keys(
