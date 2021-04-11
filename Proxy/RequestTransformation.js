@@ -116,7 +116,8 @@ class RequestTransformation {
           validBody = v.validate(value, convertedSchema).valid;
         }
       } else if (contentType === "application/x-www-form-urlencoded") {
-        // needs to be tested lol
+        // needs to be tested lol // needs to get transfered into the correct datatypes because form is all string
+        
         if (typeRequestBody === "object") {
           convertedSchema.additionalProperties = false;
           convertedSchema.required = Object.keys(convertedSchema.properties);
