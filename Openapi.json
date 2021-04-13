@@ -188,8 +188,7 @@
             "required": true,
             "description": "",
             "schema": {
-              "type": "integer",
-              "minimum": 1
+              "type": "integer"
             }
           }
         ],
@@ -263,6 +262,10 @@
           },
           "zip-code": {
             "type": "string"
+          },
+          "comment": {
+            "type": "string",
+            "enum": ["bin", "hallo", "ich"]
           }
         }
       },
