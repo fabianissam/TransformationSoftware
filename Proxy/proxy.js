@@ -4,7 +4,7 @@ const express = require("express");
 const OtG = require("openapi-to-graphql");
 const reqtra = require("./RequestTransformation");
 const cookieParser = require("cookie-parser");
-const oas = require("../OpenapiTest.json");
+const oas = require("../Openapi.json");
 const $RefParser = require("@apidevtools/json-schema-ref-parser");
 const graphql = require("graphql");
 

@@ -101,27 +101,37 @@ class RequestTransformation {
     var v = new Validator();
     var validBody = false;
     if (method.rest.requestBody) {
-      var contentTypes = Object.keys(method.rest.requestBody.content);
-      var contentType = contentTypes.find((contentType) => {
-        return contentType === this.data.headers["content-type"];
-      });
+      var required = method.rest.requestBody.required
+        ? method.rest.requestBody.required
+        : false;
+      if (Object.keys(this.data.body).length !== 0) {
+        var contentTypes = Object.keys(method.rest.requestBody.content);
+        var contentType = contentTypes.find((contentType) => {
+          return contentType === this.data.headers["content-type"];
+        });
 
-      var schema = method.rest.requestBody.content[contentType].schema;
-      var convertedSchema = toJsonSchema(schema);
-      if (contentType === "application/json") {
-        convertedSchema.additionalProperties = false;
-        convertedSchema.required = schema.required ? schema.required : [];
-        validBody = v.validate(this.data.body, convertedSchema).valid;
-      } else if (contentType === "application/x-www-form-urlencoded") {
-        // needs to be tested lol // needs to get transfered into the correct datatypes because form is all string
-        //formDataTransformer();
-        convertedSchema.additionalProperties = false;
-        convertedSchema.required = schema.required ? schema.required : [];
+        var schema = method.rest.requestBody.content[contentType].schema;
+        var convertedSchema = toJsonSchema(schema);
+        if (contentType === "application/json") {
+          convertedSchema.additionalProperties = false;
+          convertedSchema.required = schema.required ? schema.required : [];
+          validBody = v.validate(this.data.body, convertedSchema).valid;
+        } else if (contentType === "application/x-www-form-urlencoded") {
+          // needs to be tested lol // needs to get transfered into the correct datatypes because form is all string
+          //formDataTransformer();
+          convertedSchema.additionalProperties = false;
+          convertedSchema.required = schema.required ? schema.required : [];
 
-        var obj = this.data.body;
+          var obj = this.data.body;
 
-        var finalObj = this.rightTypeConverter(obj, schema);
-        validBody = v.validate(finalObj, convertedSchema).valid;
+          var finalObj = this.rightTypeConverter(obj, schema);
+          this.data.body = finalObj;
+          validBody = v.validate(finalObj, convertedSchema).valid;
+        }
+      } else {
+        if (!required) {
+          validBody = true;
+        }
       }
     } else {
       validBody = true;
@@ -130,8 +140,31 @@ class RequestTransformation {
     return validBody;
   }
   rightTypeConverter(data, schema) {
-    
+    var result = data;
+    if (schema.type === "integer") {
+      result = parseInt(data);
+    } else if (schema.type === "string") {
+      result = data;
+   // } else if (schema.type === "boolean") {
+   // } else if (schema.type === "number") {
+    } else if (schema.type === "object") {
+      var properties = schema.properties;
+      var propertyKeys = Object.keys(properties);
+      propertyKeys.forEach((propertyKey) => {
+        result[propertyKey] = this.rightTypeConverter(
+          data[propertyKey],
+          properties.type
+        );
+      });
+    } else if (schema.type === "array") {
+      var itemsType = schema.items.type;
+      for (var key in data) {
+        result[key] = this.rightTypeConverter(data[key], itemsType);
+      }
+    }
+    return result;
   }
+
   async checkParameters(method) {
     //ready but needs to be tested;
     //working
@@ -146,6 +179,7 @@ class RequestTransformation {
         var para = parameters[key];
         var name = para.name;
         var schema = para.schema;
+        var required = para.required ? para.required : false;
 
         var convertedSchema = toJsonSchema.fromParameter(para);
 
@@ -158,15 +192,58 @@ class RequestTransformation {
         // eventually put the value in the objectt if not validate
 
         if (para.in === "header") {
-          obj = this.data.headers[name];
+          if (this.data.headers[name]) {
+            obj = this.data.headers[name];
+            var finalObj = this.rightTypeConverter(obj, schema);
+            this.data.headers[name] = finalObj;
+          } else {
+            if (required) {
+              validParameters = false;
+              break;
+            } else {
+              continue;
+            }
+          }
         } else if (para.in === "path") {
-          obj = this.data.params[name];
+          if (this.data.params[name]) {
+            obj = this.data.params[name];
+            var finalObj = this.rightTypeConverter(obj, schema);
+            this.data.params[name] = finalObj;
+          } else {
+            if (required) {
+              validParameters = false;
+              break;
+            } else {
+              continue;
+            }
+          }
         } else if (para.in === "query") {
-          obj = this.data.query[name];
+          if (this.data.query[name]) {
+            obj = this.data.query[name];
+            var finalObj = this.rightTypeConverter(obj, schema);
+            this.data.query[name] = finalObj;
+          } else {
+            if (required) {
+              validParameters = false;
+              break;
+            } else {
+              continue;
+            }
+          }
         } else if (para.in === "cookie") {
-          obj = this.data.cookies[name];
+          if (this.data.cookies[name]) {
+            obj = this.data.cookies[name];
+            var finalObj = this.rightTypeConverter(obj, schema);
+            this.data.cookies[name] = finalObj;
+          } else {
+            if (required) {
+              validParameters = false;
+              break;
+            } else {
+              continue;
+            }
+          }
         }
-        var finalObj = this.rightTypeConverter(obj, schema);
         if (!v.validate(finalObj, convertedSchema).valid) {
           validParameters = false;
           break;
@@ -253,6 +330,9 @@ class RequestTransformation {
           }
 
           this.data.params[id] = result;
+        } else {
+          pathEqual = false;
+          break;
         }
       } else {
         pathEqual = false;
@@ -307,28 +387,36 @@ class RequestTransformation {
           "Input";
         // if schema type is object
         if (parameter.in === "header") {
-          if (parameter.schema.type === "object") {
-            result[para] = this.data.headers[parameter.name];
-          } else {
-            result[parameter.name] = this.data.headers[parameter.name];
+          if (this.data.header[parameter.name]) {
+            if (parameter.schema.type === "object") {
+              result[para] = this.data.headers[parameter.name];
+            } else {
+              result[parameter.name] = this.data.headers[parameter.name];
+            }
           }
         } else if (parameter.in === "query") {
-          if (parameter.schema.type === "object") {
-            result[para] = this.data.query[parameter.name];
-          } else {
-            result[parameter.name] = this.data.query[parameter.name];
+          if (this.data.query[parameter.name]) {
+            if (parameter.schema.type === "object") {
+              result[para] = this.data.query[parameter.name];
+            } else {
+              result[parameter.name] = this.data.query[parameter.name];
+            }
           }
         } else if (parameter.in === "path") {
-          if (parameter.schema.type === "object") {
-            result[para] = this.data.params[parameter.name];
-          } else {
-            result[parameter.name] = this.data.params[parameter.name];
+          if (this.data.params[parameter.name]) {
+            if (parameter.schema.type === "object") {
+              result[para] = this.data.params[parameter.name];
+            } else {
+              result[parameter.name] = this.data.params[parameter.name];
+            }
           }
         } else if (parameter.in === "cookies") {
-          if (parameter.schema.type === "object") {
-            result[para] = this.data.cookies[parameter.name];
-          } else {
-            result[parameter.name] = this.data.cookies[parameter.name];
+          if (this.data.cookies[parameter.name]) {
+            if (parameter.schema.type === "object") {
+              result[para] = this.data.cookies[parameter.name];
+            } else {
+              result[parameter.name] = this.data.cookies[parameter.name];
+            }
           }
         }
       });
