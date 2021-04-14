@@ -27,6 +27,9 @@ module.exports = function sendRequest(
       } else {
         return json.data[operation];
       }
+    })
+    .catch((err) => {
+      return err;
     });
   return result;
 };
