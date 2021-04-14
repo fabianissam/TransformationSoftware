@@ -145,19 +145,19 @@ class RequestTransformation {
       result = parseInt(data);
     } else if (schema.type === "string") {
       result = data;
-   // } else if (schema.type === "boolean") {
-   // } else if (schema.type === "number") {
+      // } else if (schema.type === "boolean") {
+      // } else if (schema.type === "number") {
     } else if (schema.type === "object") {
       var properties = schema.properties;
       var propertyKeys = Object.keys(properties);
       propertyKeys.forEach((propertyKey) => {
         result[propertyKey] = this.rightTypeConverter(
           data[propertyKey],
-          properties.type
+          properties[propertyKey]
         );
       });
     } else if (schema.type === "array") {
-      var itemsType = schema.items.type;
+      var itemsType = schema.items;
       for (var key in data) {
         result[key] = this.rightTypeConverter(data[key], itemsType);
       }
