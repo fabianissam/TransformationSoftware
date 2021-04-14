@@ -3,7 +3,7 @@
 const express = require("express");
 const OtG = require("openapi-to-graphql");
 const cookieParser = require("cookie-parser");
-const oas = require("../Openapi.json");
+const oas = require("../OpenapiTest.json");
 const util = require("util");
 
 const graphql = require("graphql");
@@ -16,7 +16,7 @@ async function startServer() {
   console.log(graphql.printSchema(schema));
   var y = graphql.printSchema(schema);
   var x = graphql.parse(y);
-  console.log(util.inspect(x, false, null));
+ // console.log(util.inspect(x, false, null));
 }
 
 startServer();

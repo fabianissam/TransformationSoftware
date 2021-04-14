@@ -1,0 +1,2 @@
+GET http://localhost:3000/pets/5 HTTP/1.1
+content-type: application/json

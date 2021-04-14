@@ -110,15 +110,18 @@ class RequestTransformation {
       var convertedSchema = toJsonSchema(schema);
       if (contentType === "application/json") {
         convertedSchema.additionalProperties = false;
-        convertedSchema.required = Object.keys(convertedSchema.properties);
+        convertedSchema.required = schema.required ? schema.required : [];
         validBody = v.validate(this.data.body, convertedSchema).valid;
       } else if (contentType === "application/x-www-form-urlencoded") {
         // needs to be tested lol // needs to get transfered into the correct datatypes because form is all string
         //formDataTransformer();
         convertedSchema.additionalProperties = false;
-        convertedSchema.required = Object.keys(convertedSchema.properties);
-        this.formDataTransformer;
-        validBody = v.validate(this.data.body, convertedSchema).valid;
+        convertedSchema.required = schema.required ? schema.required : [];
+
+        var obj = this.data.body;
+
+        var finalObj = this.rightTypeConverter(obj, schema);
+        validBody = v.validate(finalObj, convertedSchema).valid;
       }
     } else {
       validBody = true;
@@ -126,18 +129,15 @@ class RequestTransformation {
 
     return validBody;
   }
-  formDataTransformer() {}
+  rightTypeConverter(data, schema) {
+    
+  }
   async checkParameters(method) {
     //ready but needs to be tested;
     //working
     var validParameters = true;
 
     var v = new Validator();
-    //parameter first
-    //params in path
-    //query in query
-    //header in header
-    //cookie in cookie
 
     var parameters = method.rest.parameters;
 
@@ -145,14 +145,13 @@ class RequestTransformation {
       for (var key in parameters) {
         var para = parameters[key];
         var name = para.name;
+        var schema = para.schema;
 
         var convertedSchema = toJsonSchema.fromParameter(para);
 
         if (convertedSchema.type === "object") {
           convertedSchema.additionalProperties = false;
-          convertedSchema.required = Object.keys(convertedSchema.properties);
-        } else if (convertedSchema.type === "array") {
-          convertedSchema.additionalItems = false;
+          convertedSchema.required = schema.required ? schema.required : [];
         }
 
         var obj = {};
@@ -167,7 +166,8 @@ class RequestTransformation {
         } else if (para.in === "cookie") {
           obj = this.data.cookies[name];
         }
-        if (!v.validate(obj, convertedSchema).valid) {
+        var finalObj = this.rightTypeConverter(obj, schema);
+        if (!v.validate(finalObj, convertedSchema).valid) {
           validParameters = false;
           break;
         }
@@ -484,7 +484,10 @@ class RequestTransformation {
     });
     // The return type of the operation
     var returnType = null;
-    if (soloType.type.kind === "ListType") {
+    if (
+      soloType.type.kind === "ListType" ||
+      soloType.type.kind === "NotNullType"
+    ) {
       returnType = soloType.type.type.name.value;
     } else {
       var returnType = soloType.type.name.value;
@@ -520,8 +523,11 @@ class RequestTransformation {
     typeDefiniton.fields.forEach((attribute) => {
       if (attribute.arguments.length === 0) {
         var newReturnType = null;
-        if (attribute.type.kind === "Listtype") {
-          newReturnType = attribute.type.type.value;
+        if (
+          attribute.type.kind === "Listtype" ||
+          attribute.type.kind === "NonNullType"
+        ) {
+          newReturnType = attribute.type.type.name.value;
         } else {
           newReturnType = attribute.type.name.value;
         }

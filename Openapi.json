@@ -271,6 +271,15 @@
       },
       "person": {
         "type": "object",
+        "required": [
+          "id",
+          "name",
+          "vorname",
+          "benutzername",
+          "email",
+          "password",
+          "fachbereich"
+        ],
         "properties": {
           "id": {
             "type": "integer"

@@ -1,3 +1,0 @@
-GET http://localhost:3000/person/5 HTTP/1.1
-content-type: application/json
-Authorization: Basic d2lraTpwZWRpYQ==

@@ -1,0 +1,2 @@
+POST  http://localhost:3000/pets HTTP/1.1
+content-type: application/json
