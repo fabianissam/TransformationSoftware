@@ -53,11 +53,18 @@ class RequestTransformation {
     this.currentMethod = undefined;
     this.basicAuthName = "";
     this.basicAuth = false; // maybe a string which auth will be used but for now a boolean
+    this.enum = [];
   }
   init(req) {
     this.getRequestData(req);
     this.createMethods();
     this.ast = graphql.parse(graphql.printSchema(this.schema));
+    this.ast.definitions.forEach((definition) => {
+      if (definition.kind === "EnumTypeDefinition") {
+        this.enum.push(definition);
+      }
+    });
+
     // throws Error if false;
   }
   getRequestData(req) {
@@ -482,14 +489,21 @@ class RequestTransformation {
     } else {
       var returnType = soloType.type.name.value;
     }
-
+    var enumType = this.enum.find((enumType) => {
+      return enumType.name.value === returnType;
+    });
+    var enumTypeBool = false;
+    if (enumType) {
+      enumTypeBool = true;
+    }
     if (
       !(
         returnType === "Int" ||
         returnType === "String" ||
         returnType === "Boolean" ||
         returnType === "Float" ||
-        returnType === "ID"
+        returnType === "ID" ||
+        enumTypeBool
       )
     ) {
       return this.getTypesHelper(returnType);
@@ -502,26 +516,36 @@ class RequestTransformation {
     var typeDefiniton = definitions.find((definition) => {
       return definition.name.value === returnType;
     });
-    var attributes = [];   
+    var attributes = [];
     typeDefiniton.fields.forEach((attribute) => {
       if (attribute.arguments.length === 0) {
-        var newReturnType = attribute.type.name.value;
-        //  var newReturnTypeEnum = attribute.type.type.name.value;
+        var newReturnType = null;
+        if (attribute.type.kind === "Listtype") {
+          newReturnType = attribute.type.type.value;
+        } else {
+          newReturnType = attribute.type.name.value;
+        }
+        var enumType = this.enum.find((enumType) => {
+          return enumType.name.value === newReturnType;
+        });
+        var enumTypeBool = false;
+        if (enumType) {
+          enumTypeBool = true;
+        }
+
         var typeObj = {};
-        /* if(newReturnType === undefined){
-
-        }*/
-
         typeObj.name = attribute.name.value;
         typeObj.nested = !(
           newReturnType === "Int" ||
           newReturnType === "String" ||
           newReturnType === "Boolean" ||
           newReturnType === "Float" ||
-          newReturnType === "ID"
+          newReturnType === "ID" ||
+          enumTypeBool
         )
           ? this.getTypesHelper(attribute.type.name.value)
           : [];
+
         attributes.push(typeObj);
       }
     });
