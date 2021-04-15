@@ -374,7 +374,10 @@ class RequestTransformation {
     });
 
     if (method.rest.requestBody) {
-      result.requestBody = this.data.body;
+      if(Object.keys(this.data.body).length > 0){
+        result.requestBody = this.data.body;
+      }
+      
     }
 
     var parametersList = method.rest.parameters;
