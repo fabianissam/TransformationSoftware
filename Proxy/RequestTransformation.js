@@ -113,17 +113,11 @@ class RequestTransformation {
         var schema = method.rest.requestBody.content[contentType].schema;
         var convertedSchema = toJsonSchema(schema);
         if (contentType === "application/json") {
-          convertedSchema.additionalProperties = false;
-          convertedSchema.required = schema.required ? schema.required : [];
           validBody = v.validate(this.data.body, convertedSchema).valid;
         } else if (contentType === "application/x-www-form-urlencoded") {
           // needs to be tested lol // needs to get transfered into the correct datatypes because form is all string
           //formDataTransformer();
-          convertedSchema.additionalProperties = false;
-          convertedSchema.required = schema.required ? schema.required : [];
-
           var obj = this.data.body;
-
           var finalObj = this.rightTypeConverter(obj, schema);
           this.data.body = finalObj;
           validBody = v.validate(finalObj, convertedSchema).valid;
@@ -140,6 +134,7 @@ class RequestTransformation {
     return validBody;
   }
   rightTypeConverter(data, schema) {
+    if (schema === undefined) return data;
     var result = data;
     if (schema.type === "integer") {
       result = parseInt(data);
@@ -182,11 +177,6 @@ class RequestTransformation {
         var required = para.required ? para.required : false;
 
         var convertedSchema = toJsonSchema.fromParameter(para);
-
-        if (convertedSchema.type === "object") {
-          convertedSchema.additionalProperties = false;
-          convertedSchema.required = schema.required ? schema.required : [];
-        }
 
         var obj = {};
         // eventually put the value in the objectt if not validate
@@ -374,10 +364,9 @@ class RequestTransformation {
     });
 
     if (method.rest.requestBody) {
-      if(Object.keys(this.data.body).length > 0){
+      if (Object.keys(this.data.body).length > 0) {
         result.requestBody = this.data.body;
       }
-      
     }
 
     var parametersList = method.rest.parameters;
