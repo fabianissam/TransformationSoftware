@@ -197,12 +197,13 @@ class RequestTransformation {
         var convertedSchema = toJsonSchema.fromParameter(para);
 
         var obj = {};
+        var finalObj = {};
         // eventually put the value in the objectt if not validate
 
         if (para.in === "header") {
           if (this.data.headers[name]) {
             obj = this.data.headers[name];
-            var finalObj = this.rightTypeConverter(obj, schema);
+            finalObj = this.rightTypeConverter(obj, schema);
             this.data.headers[name] = finalObj;
           } else {
             if (required) {
@@ -215,7 +216,7 @@ class RequestTransformation {
         } else if (para.in === "path") {
           if (this.data.params[name]) {
             obj = this.data.params[name];
-            var finalObj = this.rightTypeConverter(obj, schema);
+            finalObj = this.rightTypeConverter(obj, schema);
             this.data.params[name] = finalObj;
           } else {
             if (required) {
@@ -228,7 +229,7 @@ class RequestTransformation {
         } else if (para.in === "query") {
           if (this.data.query[name]) {
             obj = this.data.query[name];
-            var finalObj = this.rightTypeConverter(obj, schema);
+            finalObj = this.rightTypeConverter(obj, schema);
             this.data.query[name] = finalObj;
           } else {
             if (required) {
@@ -241,7 +242,7 @@ class RequestTransformation {
         } else if (para.in === "cookie") {
           if (this.data.cookies[name]) {
             obj = this.data.cookies[name];
-            var finalObj = this.rightTypeConverter(obj, schema);
+            finalObj = this.rightTypeConverter(obj, schema);
             this.data.cookies[name] = finalObj;
           } else {
             if (required) {
