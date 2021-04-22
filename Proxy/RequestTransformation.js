@@ -134,7 +134,7 @@ class RequestTransformation {
           } else if (poly === "allOf") {
             if (count === Object.keys(schemas).length) validBody = true;
           } else if (poly === "anyOf") {
-            if (count > 1) validBody = true;
+            if (count > 0) validBody = true;
           }
         } else {
           var convertedSchema = toJsonSchema(schema);
