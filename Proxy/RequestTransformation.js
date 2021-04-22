@@ -109,18 +109,36 @@ class RequestTransformation {
         var contentType = contentTypes.find((contentType) => {
           return contentType === this.data.headers["content-type"];
         });
-
-        var schema = method.rest.requestBody.content[contentType].schema;
-        var convertedSchema = toJsonSchema(schema);
-        if (contentType === "application/json") {
-          validBody = v.validate(this.data.body, convertedSchema).valid;
-        } else if (contentType === "application/x-www-form-urlencoded") {
+        if (contentType === "application/x-www-form-urlencoded") {
           // needs to be tested lol // needs to get transfered into the correct datatypes because form is all string
           //formDataTransformer();
           var obj = this.data.body;
           var finalObj = this.rightTypeConverter(obj, schema);
           this.data.body = finalObj;
-          validBody = v.validate(finalObj, convertedSchema).valid;
+        }
+        var schema = method.rest.requestBody.content[contentType].schema;
+
+        var poly = Object.keys(schema)[0];
+        var polyArray = ["oneOf", "anyOf", "allOf"];
+        if (polyArray.includes(poly)) {
+          var count = 0;
+          var schemas = schema[poly];
+          for (var s in schemas) {
+            var convertedSchema = toJsonSchema(schemas[s]);
+            validBody = v.validate(this.data.body, convertedSchema).valid;
+            if (valid) count++;
+          }
+
+          if (poly === "oneOf") {
+            if (count === 1) validBody = true;
+          } else if (poly === "allOf") {
+            if (count === Object.keys(schemas).length) validBody = true;
+          } else if (poly === "anyOf") {
+            if (count > 1) validBody = true;
+          }
+        } else {
+          var convertedSchema = toJsonSchema(schema);
+          validBody = v.validate(this.data.body, convertedSchema).valid;
         }
       } else {
         if (!required) {
